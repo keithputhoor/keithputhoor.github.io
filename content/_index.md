@@ -20,11 +20,11 @@ Explore my hands-on projects and architectural designs below:
 
 | Focus Area | Description |
 | :--- | :--- |
-| 🛡️ [**SIEM & SOC Deployment**](./siem-soc-deployment/) | Resource-optimized, containerized Security Information and Event Management lab. Highlights log ingestion, dashboarding, and CPU/RAM throttling for edge deployments. |
-| ☁️ [**Homelab Infrastructure**](./homelab-infrastructure/) | High-availability Proxmox cluster configuration, Docker/LXC containerization, and secure reverse proxy exposure via Cloudflare Tunnels. |
-| 🔒 [**Network Hardening**](./network-hardening/) | Cisco secure architecture documentation, including VLAN segmentation, Access Control Lists (ACLs), and Layer 2/3 security configurations. |
-| 🔍 [**Vulnerability Assessments**](./vulnerability-assessments/) | Deep-dive technical write-ups and lab reports using industry-standard tools like Wireshark, Nessus, and Metasploit. |
-| 🧠 [**Private AI Infrastructure**](./private-ai-infrastructure/) | Privacy-focused local deployment of Large Language Models (Ollama, Llama-3) featuring secure API orchestration and network isolation. |
+| 🛡️ [**SIEM & SOC Deployment**](/projects/siem-soc-deployment/) | Resource-optimized, containerized Security Information and Event Management lab. Highlights log ingestion, dashboarding, and CPU/RAM throttling for edge deployments. |
+| ☁️ [**Homelab Infrastructure**](/projects/homelab-infrastructure/) | High-availability Proxmox cluster configuration, Docker/LXC containerization, and secure reverse proxy exposure via Cloudflare Tunnels. |
+| 🔒 [**Network Hardening**](/projects/network-hardening/) | Cisco secure architecture documentation, including VLAN segmentation, Access Control Lists (ACLs), and Layer 2/3 security configurations. |
+| 🔍 [**Vulnerability Assessments**](/projects/vulnerability-assessments/) | Deep-dive technical write-ups and lab reports using industry-standard tools like Wireshark, Nessus, and Metasploit. |
+| 🧠 [**Private AI Infrastructure**](/projects/private-ai-infrastructure/) | Privacy-focused local deployment of Large Language Models (Ollama, Llama-3) featuring secure API orchestration and network isolation. |
 
 ## 🛠️ Technical Skills Matrix
 
