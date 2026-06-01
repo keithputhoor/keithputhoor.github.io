@@ -6,6 +6,8 @@ theme = 'blowfish'
 [params]
   colorScheme = "blowfish"
   defaultAppearance = "dark"
+  showAppearanceSwitcher = true
+  autoSwitchAppearance = true
   
 [params.homepage]
   layout = "profile"
