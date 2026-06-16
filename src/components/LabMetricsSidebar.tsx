@@ -7,7 +7,7 @@ export default function LabMetricsSidebar() {
         <svg className="w-5 h-5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
         </svg>
-        Active Lab Platforms
+        Hands-on Lab Practice
       </h3>
       
       <div className="space-y-6">
@@ -18,12 +18,12 @@ export default function LabMetricsSidebar() {
               <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)] animate-pulse"></span>
               HackTheBox
             </span>
-            <span className="text-emerald-400 text-sm font-bold">Pro Hacker</span>
+            <span className="text-emerald-400 text-sm font-medium">Active Platform</span>
           </div>
           <div className="w-full bg-slate-950 rounded-full h-2.5 border border-slate-800/80 overflow-hidden">
-            <div className="bg-gradient-to-r from-emerald-600 to-emerald-400 h-full rounded-full" style={{ width: '75%' }}></div>
+            <div className="bg-emerald-400 h-full rounded-full" style={{ width: '100%' }}></div>
           </div>
-          <p className="text-xs text-slate-500 mt-2 font-mono">Top 5% | 45 Machines Owned</p>
+          <p className="text-xs text-slate-500 mt-2 font-mono">Penetration Testing & Machine Exploits</p>
         </div>
 
         {/* TryHackMe Metric */}
@@ -33,12 +33,12 @@ export default function LabMetricsSidebar() {
               <span className="w-2 h-2 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.8)] animate-pulse"></span>
               TryHackMe
             </span>
-            <span className="text-cyan-400 text-sm font-bold">Top 1%</span>
+            <span className="text-cyan-400 text-sm font-medium">Active Platform</span>
           </div>
           <div className="w-full bg-slate-950 rounded-full h-2.5 border border-slate-800/80 overflow-hidden">
-            <div className="bg-gradient-to-r from-cyan-600 to-cyan-400 h-full rounded-full" style={{ width: '92%' }}></div>
+            <div className="bg-cyan-400 h-full rounded-full" style={{ width: '100%' }}></div>
           </div>
-          <p className="text-xs text-slate-500 mt-2 font-mono">Omniscient Rank | 120+ Rooms</p>
+          <p className="text-xs text-slate-500 mt-2 font-mono">Guided Cybersecurity Labs & Scenarios</p>
         </div>
 
         {/* Continuous Training Focus */}
