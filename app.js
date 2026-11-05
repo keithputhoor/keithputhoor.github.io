@@ -91,16 +91,16 @@ nohup /usr/local/bin/python3 /root/scripts/suricata_shipper.py >/var/log/suricat
     ],
     logs: [
       {
-        title: "NIC Hardware Offloading Breaking Inspection",
-        detail: "Suricata initially missed malformed packet streams and dropped throughput when inspecting traffic. Resolved by disabling Hardware CRC, Hardware TSO (TCP Segmentation Offload), and Hardware LRO (Large Receive Offload) under Interfaces -> Settings in OPNsense."
+        title: "Issue 1: Suricata Dropping Packets & Missing Signatures on OPNsense",
+        detail: "Root Cause: Network Interface Card (NIC) hardware offloading features were coalescing packets before Suricata could inspect the raw stream. Fix: Disabled Hardware CRC, Hardware TSO (TCP Segmentation Offload), and Hardware LRO (Large Receive Offload) in OPNsense (Interfaces -> Settings)."
       },
       {
-        title: "Daemon Persistence & Log Rotation on FreeBSD",
-        detail: "Running the Python shipper interactively terminated on SSH disconnect, and Suricata log rotation broke standard file descriptors. Implemented inode tracking (os.stat().st_ino) inside the Python generator and registered an executable startup script inside /usr/local/etc/rc.syshook.d/start/ using nohup."
+        title: "Issue 2: suricata_shipper.py Dying on SSH Disconnect & Log Rotation",
+        detail: "Root Cause: Launching the script over a standard shell killed the process on exit, and when Suricata rotated eve.json, the Python file handle stayed attached to the old inode. Fix: Added inode comparison (os.stat(filepath).st_ino != inode) inside the log-tailing loop to reopen the file upon rotation, and placed a startup daemon script in FreeBSD's /usr/local/etc/rc.syshook.d/start/99-suricata-shipper using nohup."
       },
       {
-        title: "Webhook Routing Across Subnets",
-        detail: "Verified packet traversal between the OPNsense BSD host and the containerized n8n endpoint over Tailscale/LAN using curl -X POST probes and local firewall floating rules."
+        title: "Issue 3: Alert Floods & Webhook Timeouts to n8n / Ollama",
+        detail: "Root Cause: Forwarding every low-priority informational event overwhelmed the local Ollama LLM queue and caused HTTP timeout errors across the subnet/Tailscale bridge. Fix: Filtered events strictly to event_type == \"alert\" with severity <= 2 inside the shipper script before firing the HTTP POST request to the n8n webhook."
       }
     ]
   },
@@ -149,12 +149,12 @@ nmap -sV -p 6379 --script redis-info 192.168.10.0/24`
     ],
     logs: [
       {
-        title: "Eliminating False Positives via Credentialed Scans",
-        detail: "Initial unauthenticated network scans flagged patched backports on Debian/Ubuntu targets as vulnerable based solely on service banners. Configured SSH public-key authentication in Nessus to inspect local package trees (dpkg -l) and accurately filter false positives using CVSS v3 base and temporal metrics."
+        title: "Issue 1: High False-Positive Count on Unauthenticated Scans",
+        detail: "Root Cause: Initial unauthenticated Tenable Nessus scans relied purely on service banners (flagging backported Debian packages as vulnerable). Fix: Configured credentialed SSH scans in Nessus so the scanner could query local package trees (dpkg -l) directly, eliminating banner-based false positives."
       },
       {
-        title: "Validating Exploitability & Cleartext Exposure",
-        detail: "Rather than relying strictly on automated scanner output, captured traffic in Wireshark during simulated exploitation to verify whether credentials and session payloads traversed the wire in cleartext before signing off on post-remediation verification scans."
+        title: "Issue 2: Exposed Unauthenticated Redis Instance (CVSS 9.8) & Ruby Rack Flaws",
+        detail: "Root Cause: Target services were bound to 0.0.0.0 without authentication or command restrictions, allowing remote code execution / memory dumping via Metasploit verification. Fix: Bound Redis strictly to loopback (bind 127.0.0.1 -::1), enabled protected-mode yes, enforced requirepass, renamed destructive commands (FLUSHALL, CONFIG), and updated vulnerable Ruby rack gems via bundle update rack. Verified closure with ss -tulnp and Wireshark packet captures."
       }
     ]
   },
@@ -451,9 +451,9 @@ arpspoof -i eth0 -t 10.0.2.1 10.0.2.15`
     repoUrl: "https://github.com/keithputhoor/homelab-infrastructure-iac/tree/main/restaurant-analytics-cli",
     overview: "Foundational Python CLI project combining a customer menu-ordering interface with an admin dish-summary script backed by persistent CSV storage (orders.csv), Pandas grouping, and Matplotlib pie charts.",
     highlights: [
-      "Provides a contactless customer CLI ordering flow that records itemized transactions to orders.csv.",
-      "Includes an authenticated admin summary script that groups orders by course (Starters, Main Course, Dessert, Beverages) using Pandas.",
-      "Generates Matplotlib pie charts visualizing the most frequently ordered dishes per course."
+      "Provides a contactless customer CLI ordering flow that records itemized transactions to orders.csv using newline=\"\" to prevent blank CRLF rows on Windows.",
+      "Includes an authenticated admin summary script that filters empty rows (df.dropna()), casts Quantity/Total columns to numeric types, and groups orders by course.",
+      "Generates Matplotlib pie charts visualizing the most frequently ordered dishes across Starters, Main Course, Dessert, and Beverages."
     ],
     pipeline: "Customer CLI Ordering Menu → Persistent CSV Storage (orders.csv) → Admin Login Check → Pandas Course Grouping & Matplotlib Dish Popularity Charts",
     stack: ["Python 3", "CSV File I/O", "Pandas", "Matplotlib"],
@@ -480,7 +480,9 @@ def admin_login():
     return username == "admin" and password == "admin"
 
 def generate_course_pie_chart(course_name):
-    df = pd.read_csv(CSV_FILE)
+    df = pd.read_csv(CSV_FILE).dropna()
+    df["Quantity"] = df["Quantity"].astype(int)
+    df["Total"] = df["Total"].astype(float)
     course_df = df[df["Course"] == course_name]
     if course_df.empty:
         print(f"[INFO] No order records found for course: {course_name}")
@@ -509,12 +511,12 @@ if __name__ == "__main__":
     ],
     logs: [
       {
-        title: "Merging Separate Customer & Admin CLI Modules",
-        detail: "Integrated the customer ordering CLI and the admin menu-summary script by standardizing the CSV column headers (Customer, Course, Item, Quantity, Unit_Price, Total) so orders saved in the customer flow could be read directly by the summary script."
+        title: "Issue 1: IndexError & Empty Rows Breaking Matplotlib Pie Charts",
+        detail: "Root Cause: Writing orders to orders.csv on Windows without newline=\"\" inserted blank CRLF rows between every order, crashing the admin summary parser when iterating over rows. Fix: Enforced open(\"orders.csv\", mode=\"a\", newline=\"\") across the customer ordering module and added empty-row filtering (df.dropna()) before grouping quantities."
       },
       {
-        title: "Fixing Windows CRLF Blank Rows in CSV Output",
-        detail: "On Windows/PyCharm, opening orders.csv without newline=\"\" inserted blank lines between rows, which threw IndexError and ValueError when summing quantities. Added newline=\"\" to the CSV writer and cast Quantity values to integers before generating pie charts."
+        title: "Issue 2: Schema Mismatch During Multi-Module Compilation",
+        detail: "Root Cause: Combining the customer ordering menu with the admin login and summary script caused string-concatenation bugs instead of numeric addition when totaling dish quantities. Fix: Explicitly cast the Quantity and Total columns to int/float and standardized the course labels (Starters, Main Course, Dessert, Beverages) so matplotlib.pyplot.pie() rendered accurate percentages."
       }
     ]
   },
@@ -524,17 +526,51 @@ if __name__ == "__main__":
     categoryName: "Homelab, Self-Hosting & Communications",
     subjectBadge: "Proxmox VE & Debian",
     visibility: "Public Repo",
-    title: "Proxmox VE Virtualization & Media Automation Stack",
+    title: "Proxmox VE Virtualization, Multi-Drive Storage & Media Stack",
     repoUrl: "https://github.com/keithputhoor/homelab-infrastructure-iac/tree/main/proxmox-media-stack",
-    overview: "Bare-metal Proxmox VE virtualization environment running isolated Debian Linux VMs and unprivileged LXC containers. Orchestrates a multi-container media, digital library, and workflow automation stack via Docker Compose, secured externally through Cloudflare Zero Trust Access.",
+    overview: "Bare-metal Proxmox VE virtualization environment running isolated Debian Linux VMs and unprivileged LXC containers. Pools Drive 1 (1TB HDD, /mnt/pve/drive_1) and Drive 2 (4TB HDD, /mnt/pve/drive_2) via MergerFS (/mnt/storage) to orchestrate Jellyfin media streaming, automated .srt subtitle synchronization (Bazarr), Kavita document hosting, and n8n automation behind Cloudflare Zero Trust Access.",
     highlights: [
-      "Runs Jellyfin, Jellyseerr, Sonarr, Radarr, Prowlarr, qBittorrent, Kavita, and n8n on Debian Linux with least-privilege PUID/PGID=1000 permissions.",
-      "Uses a unified /mnt/media:/data bind-mount architecture across Proxmox and Docker so Sonarr/Radarr execute instant atomic hardlinks instead of slow I/O file copies.",
+      "Combines Drive 1 (/mnt/pve/drive_1, 1TB HDD) and Drive 2 (/mnt/pve/drive_2, 4TB HDD) into a unified 5TB MergerFS pool (/mnt/storage) with use_ino enabled for instant atomic hardlinks across media_1/ and media_2/ libraries.",
+      "Runs Jellyfin, Jellyseerr, Bazarr (.srt subtitle alignment on media_1/media_1.en.srt), Kavita, and n8n on Debian Linux with standardized PUID=1000 / PGID=1000 permissions.",
       "Eliminates WAN port forwarding on the router by exposing public-facing services through Cloudflare Zero Trust Tunnels (cloudflared) with OTP authentication."
     ],
-    pipeline: "Proxmox VE Bare-Metal Hypervisor → Isolated Debian VMs & LXC Containers → Unified /mnt/media:/data Hardlink Mount → Docker Compose (*arr Stack, Jellyfin, Kavita, n8n) → Cloudflare Zero Trust Access",
-    stack: ["Proxmox VE", "Debian Linux", "Docker Compose", "Cloudflare Zero Trust", "LXC"],
+    pipeline: "Proxmox VE Host (Drive 1 [1TB] + Drive 2 [4TB] → MergerFS /mnt/storage) → Unprivileged LXC Bind Mount (mp0) → Docker Compose (Jellyfin, Bazarr Subtitles, Kavita, n8n) → Cloudflare Zero Trust Access",
+    stack: ["Proxmox VE", "Debian Linux", "MergerFS", "Docker Compose", "Cloudflare Zero Trust", "LXC"],
     snippets: [
+      {
+        filename: "proxmox-media-stack/storage-mergerfs-lxc.conf",
+        lang: "conf",
+        code: `# 1. /etc/fstab on Proxmox Host (UUID Mounts with 'nofail' + MergerFS Pool)
+# Drive 1: 1TB HDD (/mnt/pve/drive_1)
+# Drive 2: 4TB HDD (/mnt/pve/drive_2)
+UUID=<DRIVE_1_1TB_UUID>  /mnt/pve/drive_1   ext4  defaults,nofail,x-systemd.device-timeout=30s  0  2
+UUID=<DRIVE_2_4TB_UUID>  /mnt/pve/drive_2   ext4  defaults,nofail,x-systemd.device-timeout=30s  0  2
+
+# MergerFS Pool combining Drive 1 (1TB) and Drive 2 (4TB) into /mnt/storage (5TB Unified)
+/mnt/pve/drive_1:/mnt/pve/drive_2  /mnt/storage  fuse.mergerfs  defaults,nonempty,allow_other,use_ino,cache.files=off,moveonenospc=true,category.create=epmfs,dropcacheonclose=true,minfreespace=20G,fsname=mergerfs  0  0
+
+# 2. /etc/pve/lxc/<CTID>.conf (LXC Container Storage Bind Mounts)
+mp0: /mnt/storage,mp=/mnt/storage
+# Dual-drive bind mount layout:
+# mp0: /mnt/pve/drive_2,mp=/mnt/drive_2
+# mp1: /mnt/pve/drive_1,mp=/mnt/drive_1
+
+# 3. Sanitized Directory & Subtitle Layout (/mnt/storage)
+# /mnt/storage/
+# ├── ingest/
+# │   └── media_1/
+# │       ├── media_1.mp4
+# │       └── media_1.en.srt
+# ├── library/
+# │   ├── media_1/
+# │   │   ├── media_1.mp4
+# │   │   └── media_1.en.srt
+# │   └── media_2/
+# │       ├── media_2.mkv
+# │       └── media_2.en.srt
+# ├── documents/
+# └── nas_share/`
+      },
       {
         filename: "proxmox-media-stack/docker-compose.yml",
         lang: "yaml",
@@ -549,8 +585,10 @@ services:
       - TZ=UTC
     volumes:
       - ./config/jellyfin:/config
-      - /mnt/media/tv:/data/tvshows
-      - /mnt/media/movies:/data/movies
+      - /mnt/storage/library/media_1:/data/library/media_1
+      - /mnt/storage/library/media_2:/data/library/media_2
+    devices:
+      - /dev/dri:/dev/dri
     ports:
       - "8096:8096"
     restart: unless-stopped
@@ -566,62 +604,18 @@ services:
       - "5055:5055"
     restart: unless-stopped
 
-  sonarr:
-    image: lscr.io/linuxserver/sonarr:latest
-    container_name: sonarr
+  bazarr:
+    image: lscr.io/linuxserver/bazarr:latest
+    container_name: bazarr
     environment:
       - PUID=1000
       - PGID=1000
       - TZ=UTC
     volumes:
-      - ./config/sonarr:/config
-      - /mnt/media:/data
+      - ./config/bazarr:/config
+      - /mnt/storage:/data
     ports:
-      - "8989:8989"
-    restart: unless-stopped
-
-  radarr:
-    image: lscr.io/linuxserver/radarr:latest
-    container_name: radarr
-    environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=UTC
-    volumes:
-      - ./config/radarr:/config
-      - /mnt/media:/data
-    ports:
-      - "7878:7878"
-    restart: unless-stopped
-
-  prowlarr:
-    image: lscr.io/linuxserver/prowlarr:latest
-    container_name: prowlarr
-    environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=UTC
-    volumes:
-      - ./config/prowlarr:/config
-    ports:
-      - "9696:9696"
-    restart: unless-stopped
-
-  qbittorrent:
-    image: lscr.io/linuxserver/qbittorrent:latest
-    container_name: qbittorrent
-    environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=UTC
-      - WEBUI_PORT=8080
-    volumes:
-      - ./config/qbittorrent:/config
-      - /mnt/media/downloads:/data/downloads
-    ports:
-      - "8080:8080"
-      - "6881:6881"
-      - "6881:6881/udp"
+      - "6767:6767"
     restart: unless-stopped
 
   kavita:
@@ -631,7 +625,7 @@ services:
       - TZ=UTC
     volumes:
       - ./config/kavita:/kavita/config
-      - /mnt/media/books:/manga
+      - /mnt/storage/documents:/documents
     ports:
       - "5000:5000"
     restart: unless-stopped
@@ -644,6 +638,7 @@ services:
       - N8N_SECURE_COOKIE=false
     volumes:
       - ./config/n8n:/home/node/.n8n
+      - /mnt/storage:/data
     ports:
       - "5678:5678"
     restart: unless-stopped`
@@ -651,12 +646,20 @@ services:
     ],
     logs: [
       {
-        title: "Cross-Container Hardlinks & I/O Bottlenecks",
-        detail: "Separate volume mounts (/downloads vs /movies) forced Sonarr and Radarr to perform slow full-file copies instead of instant atomic moves/hardlinks, doubling disk usage. Re-architected the mount tree under a unified /mnt/media:/data parent mount with consistent PUID=1000 and PGID=1000 ownership across Proxmox bind mounts."
+        title: "Issue 1: 4TB Hard Drive (Drive 2) Failing to Register at Boot",
+        detail: "Root Cause: Late SATA link initialization on the motherboard caused the 4TB hard drive (/mnt/pve/drive_2) to spin up after Proxmox had already processed early boot mounts. Fix: Configured explicit UUID mounts with nofail and x-systemd.device-timeout=30s mount delays in /etc/fstab so /mnt/pve/drive_2 mounted reliably without dropping Proxmox into emergency mode."
       },
       {
-        title: "Zero-Trust External Access Without Port Forwarding",
-        detail: "Exposed Jellyseerr, Kavita, and Shelfmark under example.com subdomains via Cloudflare Zero Trust Tunnels (cloudflared) protected by Cloudflare Access OTP policies, eliminating public WAN port exposure on the residential router."
+        title: "Issue 2: Jellyfin Missing Media & Container Mount Misalignment (Drive 1 vs Drive 2)",
+        detail: "Root Cause: The Jellyfin LXC/Docker environment initially only had a bind mount for Drive 2 (mp0: /mnt/pve/drive_2) and lacked the mount point for the 1TB Drive 1 (mp1: /mnt/pve/drive_1), while staging files on Drive 1 and indexing into Drive 2 caused EXDEV cross-device hardlink failures. Fix: Added both /mnt/pve/drive_1 and /mnt/pve/drive_2 to /etc/pve/lxc/<CTID>.conf (and unified them via MergerFS into /mnt/storage) so media_1/media_1.mp4 and media_1/media_1.en.srt subtitle files link atomically."
+      },
+      {
+        title: "Issue 3: Permission Denied (EACCES) Between Unprivileged LXC and Host Drives",
+        detail: "Root Cause: Unprivileged LXC UID mapping (100000+) conflicted with root-owned directories on the ext4 physical drives (Drive 1 and Drive 2). Fix: Standardized container services on PUID=1000 / PGID=1000 and adjusted host directory ownership (chown -R 1000:1000 or 101000:101000 for unprivileged LXC mappings)."
+      },
+      {
+        title: "Issue 4: Zero-Trust External Access Without Port Forwarding",
+        detail: "Root Cause: Traditional router port forwarding exposes residential WAN IPs to internet scanners. Fix: Exposed Jellyseerr, Kavita, and Shelfmark under example.com subdomains via Cloudflare Zero Trust Tunnels (cloudflared) protected by Cloudflare Access OTP policies."
       }
     ]
   },
@@ -664,19 +667,54 @@ services:
     id: "PROJ-11",
     category: 2,
     categoryName: "Homelab, Self-Hosting & Communications",
-    subjectBadge: "GPU Passthrough & LLM",
+    subjectBadge: "GTX 1650 Ti Mobile & LLM",
     visibility: "Public Repo",
-    title: "Local AI Inference Server",
+    title: "Local AI Inference Server (GTX 1650 Ti Mobile LXC Passthrough)",
     repoUrl: "https://github.com/keithputhoor/homelab-infrastructure-iac/tree/main/local-ai-inference",
-    overview: "Self-hosted, GPU-accelerated LLM inference stack running Ollama and Open WebUI inside a Proxmox VE Debian environment via the NVIDIA Container Toolkit. Provides both an authenticated local chat UI and a low-latency REST API for automated n8n SOC alert triage.",
+    overview: "Self-hosted, GPU-accelerated LLM inference stack running Ollama and Open WebUI inside a Proxmox VE Debian LXC container powered by an NVIDIA GeForce GTX 1650 Ti Mobile. Uses cgroup2 character device passthrough (c 195:* and c 508:* nvidia-uvm), --no-kernel-module user-space drivers, and the NVIDIA Container Toolkit to serve interactive chat and low-latency REST APIs for n8n SOC alert triage.",
     highlights: [
-      "Passed physical NVIDIA GPU character devices (/dev/nvidia*) through Proxmox VE into the Docker runtime using nvidia-container-toolkit.",
-      "Configured OLLAMA_KEEP_ALIVE=5m to automatically unload model weights from VRAM after idle periods.",
-      "Bound Ollama across the internal Docker bridge network while enforcing WEBUI_AUTH=true on Open WebUI."
+      "Passed the physical NVIDIA GeForce GTX 1650 Ti Mobile (/dev/nvidia0 [c 195:*] and /dev/nvidia-uvm [c 508:*]) from the Proxmox VE host into an unprivileged/nested LXC container.",
+      "Installed matching NVIDIA user-space drivers inside the LXC with --no-kernel-module and configured no-cgroups = true in /etc/nvidia-container-runtime/config.toml.",
+      "Configured OLLAMA_HOST=0.0.0.0:11434 and OLLAMA_KEEP_ALIVE=5m to serve both Open WebUI (WEBUI_AUTH=true) and automated n8n SOC triage workflows."
     ],
-    pipeline: "Proxmox VE Host (NVIDIA GPU Passthrough /dev/nvidia*) → NVIDIA Container Toolkit → Ollama Backend (0.0.0.0:11434) → Open WebUI & n8n REST API",
-    stack: ["Proxmox VE", "Debian Linux", "Docker Compose", "NVIDIA Container Toolkit", "Ollama", "Open WebUI"],
+    pipeline: "Proxmox VE Host (GTX 1650 Ti Mobile: c 195:* & c 508:* udev) → LXC Bind Mounts & --no-kernel-module → NVIDIA Container Toolkit (no-cgroups=true) → Ollama (0.0.0.0:11434) & Open WebUI",
+    stack: ["Proxmox VE", "GTX 1650 Ti Mobile", "Debian Bookworm", "LXC GPU Passthrough", "NVIDIA Container Toolkit", "Ollama", "Open WebUI"],
     snippets: [
+      {
+        filename: "local-ai-inference/lxc-gtx1650ti-passthrough.conf",
+        lang: "conf",
+        code: `# 1. Proxmox Host UVM Persistence (/etc/udev/rules.d/70-nvidia.rules)
+KERNEL=="nvidia", RUN+="/bin/bash -c '/usr/bin/nvidia-smi -L && /bin/chmod 666 /dev/nvidia*'"
+KERNEL=="nvidia_uvm", RUN+="/bin/bash -c '/usr/bin/nvidia-modprobe -c0 -u && /bin/chmod 666 /dev/nvidia-uvm*'"
+
+# 2. GTX 1650 Ti Mobile Major Device Numbers (ls -la /dev/nvidia*)
+# crw-rw-rw- 1 root root 195,   0 /dev/nvidia0
+# crw-rw-rw- 1 root root 195, 255 /dev/nvidiactl
+# crw-rw-rw- 1 root root 195, 254 /dev/nvidia-modeset
+# crw-rw-rw- 1 root root 508,   0 /dev/nvidia-uvm
+# crw-rw-rw- 1 root root 508,   1 /dev/nvidia-uvm-tools
+
+# 3. LXC Container Configuration (/etc/pve/lxc/<CTID>.conf)
+arch: amd64
+features: nesting=1,keyctl=1
+lxc.cgroup2.devices.allow: c 195:* rwm
+lxc.cgroup2.devices.allow: c 508:* rwm
+lxc.cgroup2.devices.allow: c 226:* rwm
+lxc.cgroup2.devices.allow: c 10:229 rwm
+lxc.mount.entry: /dev/nvidia0 dev/nvidia0 none bind,optional,create=file
+lxc.mount.entry: /dev/nvidiactl dev/nvidiactl none bind,optional,create=file
+lxc.mount.entry: /dev/nvidia-modeset dev/nvidia-modeset none bind,optional,create=file
+lxc.mount.entry: /dev/nvidia-uvm dev/nvidia-uvm none bind,optional,create=file
+lxc.mount.entry: /dev/nvidia-uvm-tools dev/nvidia-uvm-tools none bind,optional,create=file
+lxc.mount.entry: /dev/dri dev/dri none bind,optional,create=dir
+lxc.mount.entry: /dev/fuse dev/fuse none bind,optional,create=file
+
+# 4. Inside LXC: Matching User-Space Driver & Docker Runtime
+# ./NVIDIA-Linux-x86_64-<VERSION>.run --no-kernel-module
+# nvidia-ctk runtime configure --runtime=docker
+# sed -i 's/#no-cgroups = false/no-cgroups = true/g' /etc/nvidia-container-runtime/config.toml
+# systemctl restart docker && nvidia-smi`
+      },
       {
         filename: "local-ai-inference/docker-compose.ai.yml",
         lang: "yaml",
@@ -718,12 +756,20 @@ services:
     ],
     logs: [
       {
-        title: "Proxmox GPU Device Passthrough to Containers",
-        detail: "Ollama initially defaulted to slow CPU inference because /dev/nvidia* character devices were missing inside the container runtime. Configured nvidia-container-toolkit and verified lxc.cgroup2.devices.allow / device mappings so nvidia-smi properly exposed VRAM inside the container."
+        title: "Issue 1: Debian Trixie Repository Conflicts Breaking NVIDIA Driver Compilation",
+        detail: "Root Cause: Mixed apt repository sources between Debian trixie (testing) and Proxmox VE kernel headers (pve-headers-$(uname -r)) caused dependency conflicts when compiling the NVIDIA DKMS module on the host. Fix: Standardized /etc/apt/sources.list onto aligned Debian Bookworm and Proxmox VE No-Subscription repositories, installed matching pve-headers-$(uname -r), and compiled the host driver cleanly."
       },
       {
-        title: "Inter-Container API Refusal (127.0.0.1 vs 0.0.0.0)",
-        detail: "Open WebUI and external n8n workflows returned Connection Refused when querying Ollama. Overrode the default loopback binding by setting OLLAMA_HOST=0.0.0.0:11434 and routing Open WebUI over the internal Docker bridge (http://ollama:11434)."
+        title: "Issue 2: Missing /dev/nvidia-uvm Node & Major Device Number (508) Blocking CUDA in LXC",
+        detail: "Root Cause: Even when /dev/nvidia0 (195) was passed through, CUDA workloads (like Ollama) fell back to CPU because /dev/nvidia-uvm (c 508:*) wasn't initialized on the host until nvidia-modprobe -c0 -u was invoked, and the LXC lacked nesting=1 and /dev/fuse. Fix: Added /etc/udev/rules.d/70-nvidia.rules to initialize nvidia-uvm at boot, enabled features: nesting=1,keyctl=1, added lxc.cgroup2.devices.allow: c 508:* rwm, and bind-mounted /dev/nvidia-uvm, /dev/nvidia-uvm-tools, /dev/nvidia-modeset, and /dev/fuse into /etc/pve/lxc/<CTID>.conf."
+      },
+      {
+        title: "Issue 3: Driver Version Mismatch & Kernel Module Conflict Inside LXC",
+        detail: "Root Cause: Running a standard apt install nvidia-driver inside the LXC attempted to build kernel modules against a shared host kernel and caused version mismatches (Failed to initialize NVML: Driver/library version mismatch). Fix: Installed the exact matching .run installer inside the LXC using --no-kernel-module and set no-cgroups = true in /etc/nvidia-container-runtime/config.toml so nested Docker containers could access the GTX 1650 Ti Mobile."
+      },
+      {
+        title: "Issue 4: Open WebUI Connection Refused When Querying Ollama",
+        detail: "Root Cause: Ollama bound exclusively to 127.0.0.1:11434 inside its container, rejecting requests from adjacent Open WebUI and n8n containers. Fix: Set OLLAMA_HOST=0.0.0.0:11434 and pointed Open WebUI to OLLAMA_BASE_URL=http://ollama:11434."
       }
     ]
   },
@@ -735,13 +781,13 @@ services:
     visibility: "Public Repo",
     title: "Smart Home Automation",
     repoUrl: "https://github.com/keithputhoor/homelab-infrastructure-iac/tree/main/smart-home-zigbee",
-    overview: "Local-only Home Assistant automation stack integrated with Zigbee2MQTT, an Eclipse Mosquitto broker, and an SLZB-06p7 PoE/LAN coordinator. Correlates Hobeian ZG-102ZM vibration sensors with mmWave human presence sensors for zero-cloud security automation.",
+    overview: "Local-only Home Assistant automation stack integrated with Zigbee2MQTT, an Eclipse Mosquitto broker, and a Sonoff SLZB-06p7 PoE/LAN coordinator. Correlates Hobeian ZG-102ZM vibration sensors with mmWave human presence sensors and mains-powered micro-relay routers for zero-cloud security automation.",
     highlights: [
-      "Decoupled the Zigbee radio from Proxmox USB passthrough constraints by running an SLZB-06p7 PoE coordinator over TCP (tcp://<COORDINATOR_IP>:6638).",
-      "Tuned the Zigbee 3.0 mesh to Channel 20 at 20 dBm transmit power to avoid 2.4 GHz Wi-Fi co-channel interference.",
+      "Decoupled the Zigbee radio from Proxmox USB passthrough constraints by running a Sonoff SLZB-06p7 PoE coordinator centrally over LAN TCP (tcp://<COORDINATOR_IP>:6638).",
+      "Tuned the Zigbee 3.0 mesh to Channel 20 at 20 dBm transmit power and deployed mains-powered micro-relays as mesh routers to penetrate thick concrete apartment walls.",
       "Built multi-sensor state correlation in Home Assistant so vibration tamper alerts only fire when the mmWave presence sensor confirms the room is vacant."
     ],
-    pipeline: "SLZB-06p7 PoE Coordinator (tcp://<COORDINATOR_IP>:6638, Channel 20) → Zigbee2MQTT → Eclipse Mosquitto Broker → Home Assistant Core (Hobeian ZG-102ZM Vibration + mmWave Presence Correlation)",
+    pipeline: "Sonoff SLZB-06p7 PoE Coordinator (tcp://<COORDINATOR_IP>:6638, Channel 20 @ 20 dBm) → Zigbee2MQTT → Eclipse Mosquitto Broker → Home Assistant Core (Hobeian ZG-102ZM Vibration + mmWave Presence Correlation)",
     stack: ["Home Assistant", "Zigbee2MQTT", "MQTT", "SLZB-06p7", "YAML Automations"],
     snippets: [
       {
@@ -794,16 +840,16 @@ action:
     ],
     logs: [
       {
-        title: "SLZB-06p7 TCP Socket Drops & socat Watchdog",
-        detail: "Operating the coordinator over TCP (tcp://...:6638) bypasses physical USB passthrough limits in Proxmox, but brief LAN glitches can drop the serial socket. Configured explicit zstack adapter parameters and TCP keepalive/socat reconnection settings so Zigbee2MQTT recovers automatically without manual container restarts."
+        title: "Issue 1: Zigbee Signal Dropouts Through Thick Concrete Apartment Walls",
+        detail: "Root Cause: High signal attenuation across thick interior concrete walls caused battery-powered end devices (like the Hobeian ZG-102ZM vibration sensor) to drop off the mesh. Fix: Deployed the Sonoff SLZB-06p7 Ethernet/PoE coordinator positioned centrally over LAN (tcp://<COORDINATOR_IP>:6638), boosted transmit power to 20 dBm, switched to Zigbee Channel 20 (avoiding 2.4GHz Wi-Fi interference), and used mains-powered micro-relays as Zigbee mesh routers."
       },
       {
-        title: "Hobeian ZG-102ZM Quirk & Sensitivity Calibration",
-        detail: "Tuya-based ZG-102ZM vibration sensors frequently pair as generic unsupported devices or suffer from either missed micro-vibrations or false triggers. Exposed custom Zigbee2MQTT external converters/sensitivity attributes and paired the trigger with an mmWave presence state condition to eliminate false alarms when the room is occupied."
+        title: "Issue 2: Hobeian ZG-102ZM Vibration Sensor False Alarms",
+        detail: "Root Cause: Tuya ZG-102ZM sensors triggered on minor ambient vibrations or when someone was simply walking around the room. Fix: Calibrated sensitivity inside Zigbee2MQTT and combined the vibration trigger with an mmWave presence sensor state condition in Home Assistant so alerts only fire when vibration occurs while the room is vacant (off)."
       },
       {
-        title: "2.4GHz Wi-Fi / Zigbee Co-Channel Interference",
-        detail: "Migrated the Zigbee network to Channel 20 to sit cleanly outside standard 2.4GHz Wi-Fi channels 1 and 6, preventing packet loss on low-power end devices."
+        title: "Issue 3: SLZB-06p7 TCP Socket Drops & socat Watchdog",
+        detail: "Root Cause: Operating the coordinator over TCP (tcp://<COORDINATOR_IP>:6638) bypasses physical USB passthrough limits in Proxmox, but brief LAN glitches can drop the serial socket. Fix: Configured explicit zstack adapter parameters and TCP keepalive/reconnection settings so Zigbee2MQTT recovers automatically without manual container restarts."
       }
     ]
   }
