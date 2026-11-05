@@ -7,8 +7,7 @@ Terminal/SOC-inspired interactive technical case-study portfolio showcasing cybe
 
 ## Featured Repositories
 * [**`soc-ai-alert-triage`**](https://github.com/keithputhoor/soc-ai-alert-triage) — OPNsense (Suricata IDS) + Python Daemon + n8n + Local Ollama LLM Triage Pipeline
-* [**`CSCI369-Ethical-Hacking`**](https://github.com/keithputhoor/CSCI369-Ethical-Hacking) — **CSCI369 Ethical Hacking**: Enterprise Vulnerability Assessment, Remediation & Offensive Security Labs
-* [**`CSCI368-Network-Security`**](https://github.com/keithputhoor/CSCI368-Network-Security) — **CSCI368 Network Security**: CloudCafe Multi-Site Enterprise Network Design, IPsec VPN, ZPF & Labs
-* [**`CSIT375-AI-and-Cybersecurity`**](https://github.com/keithputhoor/CSIT375-AI-and-Cybersecurity) — **CSIT375 Artificial Intelligence and Cybersecurity**: PDF Malware Detection & Behavioral Sanitization Engine + ML Security Labs
-* [**`homelab-infrastructure-iac`**](https://github.com/keithputhoor/homelab-infrastructure-iac) — Proxmox VE Media Stack, Local GPU AI Inference Server & Zigbee2MQTT Smart Home Automation
-
+* [**`Ethical-Hacking-Portfolio`**](https://github.com/keithputhoor/Ethical-Hacking-Portfolio) — **Ethical Hacking**: Enterprise Vulnerability Assessment, Remediation & Offensive Security Labs
+* [**`Network-Security-Portfolio`**](https://github.com/keithputhoor/Network-Security-Portfolio) — **Network Security**: CloudCafe Multi-Site Enterprise Network Design, IPsec VPN, ZPF & Security Labs
+* [**`AI-and-Cybersecurity-Portfolio`**](https://github.com/keithputhoor/AI-and-Cybersecurity-Portfolio) — **Artificial Intelligence and Cybersecurity**: PDF Malware Detection & Behavioral Sanitization Engine + ML Security Labs
+* [**`homelab-infrastructure-iac`**](https://github.com/keithputhoor/homelab-infrastructure-iac) — Proxmox VE Multi-Drive Storage & Media Stack, Local GPU AI Inference Server & Zigbee2MQTT Smart Home Automation

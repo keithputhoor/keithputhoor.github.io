@@ -4,13 +4,13 @@ Interactive dark-themed cybersecurity and systems engineering portfolio website 
 
 ## Category 1: Cybersecurity, Networking & Academic Projects
 1. **AI-Assisted SOC Alert Triage Pipeline** (`OPNsense`, `Suricata IDS`, `Python 3`, `n8n`, `Ollama`, `Tailscale`)
-2. **Enterprise Vulnerability Assessment & Remediation Simulation** (`CSCI369 Ethical Hacking` — `Tenable Nessus`, `Wireshark`, `Metasploit`, `Redis`, `Ruby Rack`)
-3. **PDF Malware Detection & Behavioral Sanitization Engine** (`CSIT375 Artificial Intelligence and Cybersecurity` — `Random Forest`, `PyPDF`, `CIC-PDF-Malware-2022`)
-4. **CloudCafe Multi-Site Enterprise Network Security Architecture** (`CSCI368 Network Security` — `Cisco IOS`, `IPsec VPN`, `Zone-Based Policy Firewall`, `802.1X RADIUS`)
-5. **OWASP Juice Shop Web Application Penetration Test** (`CSCI369 Ethical Hacking` — `Kali Linux`, `Burp Suite`, `SQLi`, `XSS`)
-6. **Wireshark TLS Decryption & Network Packet Forensics** (`CSCI369 Ethical Hacking` — `Wireshark`, `SSLKEYLOGFILE`, `TLS 1.2/1.3`)
-7. **Multivariate Gaussian Network Anomaly & NSL-KDD Intrusion Detection** (`CSIT375 Artificial Intelligence and Cybersecurity` — `NumPy`, `Scikit-Learn`, `NSL-KDD`)
-8. **ARP Cache Poisoning MITM & Burp Suite HTTP Parameter Tampering** (`CSCI368` & `CSCI369` — `Kali Linux`, `arpspoof`, `Burp Suite`, `Wireshark`)
+2. **Enterprise Vulnerability Assessment & Remediation Simulation** (`Ethical Hacking` — `Tenable Nessus`, `Wireshark`, `Metasploit`, `Redis`, `Ruby Rack`)
+3. **PDF Malware Detection & Behavioral Sanitization Engine** (`Artificial Intelligence and Cybersecurity` — `Random Forest`, `PyPDF`, `CIC-PDF-Malware-2022`)
+4. **CloudCafe Multi-Site Enterprise Network Security Architecture** (`Network Security` — `Cisco IOS`, `IPsec VPN`, `Zone-Based Policy Firewall`, `802.1X RADIUS`)
+5. **OWASP Juice Shop Web Application Penetration Test** (`Ethical Hacking` — `Kali Linux`, `Burp Suite`, `SQLi`, `XSS`)
+6. **Wireshark TLS Decryption & Network Packet Forensics** (`Ethical Hacking` — `Wireshark`, `SSLKEYLOGFILE`, `TLS 1.2/1.3`)
+7. **Multivariate Gaussian Network Anomaly & NSL-KDD Intrusion Detection** (`Artificial Intelligence and Cybersecurity` — `NumPy`, `Scikit-Learn`, `NSL-KDD`)
+8. **ARP Cache Poisoning MITM & Burp Suite HTTP Parameter Tampering** (`Network Security & Ethical Hacking Labs` — `Kali Linux`, `arpspoof`, `Burp Suite`, `Wireshark`)
 9. **Python CLI Restaurant Ordering & Menu Summary Tool** (`Python 3`, `CSV I/O`, `Pandas`, `Matplotlib`)
 
 ## Category 2: Homelab, Self-Hosting & Communications
