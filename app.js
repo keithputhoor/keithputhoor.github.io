@@ -883,9 +883,10 @@ function openModal(proj) {
     .map((h) => `<li>${escapeHtml(h)}</li>`)
     .join("");
 
-  // Tab 1: Overview, Highlights & Architecture
+  // Section 1: Overview, Highlights & Architecture
   const archPanel = document.getElementById("tab-arch");
   archPanel.innerHTML = `
+    <div class="modal-section-banner">01 // Overview &amp; Architecture</div>
     <div class="panel-section">
       <div class="panel-heading">Project Overview</div>
       <p class="overview-text">${escapeHtml(proj.overview)}</p>
@@ -895,7 +896,7 @@ function openModal(proj) {
       <div class="panel-heading">Data &amp; Control Pipeline</div>
       <div class="pipeline-box">${escapeHtml(proj.pipeline)}</div>
     </div>
-    <div class="panel-section">
+    <div class="panel-section" style="margin-bottom: 0;">
       <div class="panel-heading">Technology Stack &amp; Components</div>
       <div class="stack-tags">
         ${proj.stack.map((s) => `<span class="stack-tag">${escapeHtml(s)}</span>`).join("")}
@@ -903,11 +904,13 @@ function openModal(proj) {
     </div>
   `;
 
-  // Tab 2: Code & Configuration
+  // Section 2: Code & Configuration
   const codePanel = document.getElementById("tab-code");
-  codePanel.innerHTML = proj.snippets
-    .map(
-      (snip, idx) => `
+  codePanel.innerHTML =
+    `<div class="modal-section-banner">02 // Code &amp; Configuration</div>` +
+    proj.snippets
+      .map(
+        (snip, idx) => `
       <div class="code-block-wrapper">
         <div class="code-block-header">
           <span>${escapeHtml(snip.filename)}</span>
@@ -916,8 +919,8 @@ function openModal(proj) {
         <pre class="code-content"><code>${escapeHtml(snip.code)}</code></pre>
       </div>
     `
-    )
-    .join("");
+      )
+      .join("");
 
   codePanel.querySelectorAll(".copy-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
@@ -930,23 +933,30 @@ function openModal(proj) {
     });
   });
 
-  // Tab 3: Engineering & Troubleshooting Log
+  // Section 3: Engineering & Troubleshooting Log
   const logsPanel = document.getElementById("tab-logs");
-  logsPanel.innerHTML = proj.logs
-    .map(
-      (log) => `
+  logsPanel.innerHTML =
+    `<div class="modal-section-banner">03 // Engineering &amp; Troubleshooting Log</div>` +
+    proj.logs
+      .map(
+        (log) => `
       <div class="log-card">
         <div class="log-title">${escapeHtml(log.title)}</div>
         <div class="log-desc">${escapeHtml(log.detail)}</div>
       </div>
     `
-    )
-    .join("");
+      )
+      .join("");
 
-  switchTab("arch");
   modal.classList.add("open");
   modal.setAttribute("aria-hidden", "false");
   document.body.style.overflow = "hidden";
+
+  const modalBody = modal.querySelector(".modal-body");
+  if (modalBody) {
+    modalBody.scrollTop = 0;
+  }
+  setActiveTabButton("arch");
 }
 
 function closeModal() {
@@ -956,15 +966,81 @@ function closeModal() {
   document.body.style.overflow = "";
 }
 
-function switchTab(tabKey) {
+let isProgrammaticScroll = false;
+let scrollLockTimer = null;
+
+function setActiveTabButton(tabKey) {
   document.querySelectorAll(".tab-btn").forEach((btn) => {
     const active = btn.getAttribute("data-tab") === tabKey;
     btn.classList.toggle("active", active);
     btn.setAttribute("aria-selected", active ? "true" : "false");
   });
-  document.querySelectorAll(".tab-panel").forEach((panel) => {
-    panel.classList.toggle("active", panel.id === `tab-${tabKey}`);
+}
+
+function switchTab(tabKey) {
+  setActiveTabButton(tabKey);
+  const modalBody = document.querySelector("#case-study-modal .modal-body");
+  const targetSection = document.getElementById(`tab-${tabKey}`);
+  if (!modalBody || !targetSection) return;
+
+  isProgrammaticScroll = true;
+  if (scrollLockTimer) clearTimeout(scrollLockTimer);
+
+  const bodyRect = modalBody.getBoundingClientRect();
+  const targetRect = targetSection.getBoundingClientRect();
+  const offsetTop = targetRect.top - bodyRect.top + modalBody.scrollTop - 12;
+
+  modalBody.scrollTo({
+    top: Math.max(0, offsetTop),
+    behavior: "smooth"
   });
+
+  scrollLockTimer = setTimeout(() => {
+    isProgrammaticScroll = false;
+    updateActiveTabOnScroll();
+  }, 450);
+}
+
+function updateActiveTabOnScroll() {
+  if (isProgrammaticScroll) return;
+  const modalBody = document.querySelector("#case-study-modal .modal-body");
+  if (!modalBody) return;
+
+  // If scrolled to the very top, highlight 01
+  if (modalBody.scrollTop <= 12) {
+    setActiveTabButton("arch");
+    return;
+  }
+  // If scrolled to the very bottom, highlight 03
+  if (modalBody.scrollTop + modalBody.clientHeight >= modalBody.scrollHeight - 12) {
+    setActiveTabButton("logs");
+    return;
+  }
+
+  const bodyRect = modalBody.getBoundingClientRect();
+  const sections = [
+    { key: "arch", el: document.getElementById("tab-arch") },
+    { key: "code", el: document.getElementById("tab-code") },
+    { key: "logs", el: document.getElementById("tab-logs") }
+  ];
+
+  let bestKey = "arch";
+  let maxVisiblePx = -1;
+
+  sections.forEach(({ key, el }) => {
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const visibleTop = Math.max(rect.top, bodyRect.top);
+    const visibleBottom = Math.min(rect.bottom, bodyRect.bottom);
+    const visibleHeight = Math.max(0, visibleBottom - visibleTop);
+
+    if (visibleHeight > maxVisiblePx) {
+      maxVisiblePx = visibleHeight;
+      bestKey = key;
+    }
+  });
+
+  setActiveTabButton(bestKey);
 }
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -982,4 +1058,9 @@ document.addEventListener("DOMContentLoaded", () => {
   document.querySelectorAll(".tab-btn").forEach((btn) => {
     btn.addEventListener("click", () => switchTab(btn.getAttribute("data-tab")));
   });
+
+  const modalBody = document.querySelector("#case-study-modal .modal-body");
+  if (modalBody) {
+    modalBody.addEventListener("scroll", updateActiveTabOnScroll, { passive: true });
+  }
 });
