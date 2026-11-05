@@ -119,7 +119,7 @@
           <span class="section-index">CATEGORY 01</span>
           <h2 class="section-title">Cybersecurity, Networking &amp; Academic Projects</h2>
         </div>
-        <span class="section-count">05 CASE STUDIES</span>
+        <span class="section-count">09 CASE STUDIES</span>
       </div>
       <div id="grid-category-1" class="projects-grid"></div>
     </section>
@@ -192,22 +192,21 @@
     </div>
   </footer>
 
-  <!-- Interactive Case Study Drawer / Modal -->
+  <!-- Centered Interactive Case Study Modal Box -->
   <div id="case-study-modal" class="modal-backdrop" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="modal-title">
-    <div class="modal-drawer">
+    <div class="modal-box">
       <header class="modal-header">
         <div>
           <span id="modal-category" class="modal-category"></span>
           <h2 id="modal-title" class="modal-title"></h2>
         </div>
         <div class="modal-actions">
-          <a id="modal-repo-link" href="#" target="_blank" rel="noopener noreferrer" class="btn-repo-sm">Open GitHub Repo ↗</a>
-          <button id="modal-close" class="modal-close" aria-label="Close case study drawer">&times; ESC</button>
+          <button id="modal-close" class="modal-close" aria-label="Close project details">&times; ESC</button>
         </div>
       </header>
 
       <div class="modal-tabs" role="tablist">
-        <button class="tab-btn active" data-tab="arch" role="tab" aria-selected="true">01. Architecture &amp; Specs</button>
+        <button class="tab-btn active" data-tab="arch" role="tab" aria-selected="true">01. Overview &amp; Architecture</button>
         <button class="tab-btn" data-tab="code" role="tab" aria-selected="false">02. Code &amp; Configuration</button>
         <button class="tab-btn" data-tab="logs" role="tab" aria-selected="false">03. Engineering &amp; Troubleshooting Log</button>
       </div>
@@ -217,6 +216,17 @@
         <div id="tab-code" class="tab-panel" role="tabpanel"></div>
         <div id="tab-logs" class="tab-panel" role="tabpanel"></div>
       </div>
+
+      <footer class="modal-footer">
+        <div class="modal-footer-meta">
+          <span id="modal-visibility-badge" class="visibility-badge"></span>
+          <span id="modal-repo-url-text" class="modal-repo-url"></span>
+        </div>
+        <div class="modal-footer-buttons">
+          <button id="modal-close-bottom" class="btn-secondary">Close</button>
+          <a id="modal-repo-link" href="#" target="_blank" rel="noopener noreferrer" class="btn-go-repo">Go to Repository ↗</a>
+        </div>
+      </footer>
     </div>
   </div>
 

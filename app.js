@@ -4,13 +4,20 @@ const PROJECTS = [
     category: 1,
     categoryName: "Cybersecurity, Networking & Academic Projects",
     subjectBadge: "SOC Automation",
+    visibility: "Public Repo",
     title: "AI-Assisted SOC Alert Triage Pipeline",
     repoUrl: "https://github.com/keithputhoor/soc-ai-alert-triage",
+    overview: "An automated Security Operations Center (SOC) alert ingestion and LLM-assisted triage pipeline built for an OPNsense (FreeBSD) perimeter firewall. Streams real-time Suricata IDS telemetry via a custom zero-dependency Python daemon over Tailscale to an n8n orchestration workflow and a local Ollama LLM server.",
+    highlights: [
+      "Tails /var/log/suricata/eve.json in real time and tracks file inodes (os.stat().st_ino) to survive FreeBSD newsyslog rotations without dropping alerts.",
+      "Filters alert noise at the edge by forwarding only Severity 1 (High) and Severity 2 (Medium) Suricata signatures over encrypted Tailscale/LAN transport.",
+      "Persists across OPNsense firmware reboots via a native FreeBSD /usr/local/etc/rc.syshook.d/start/ startup script."
+    ],
     pipeline: "OPNsense (Suricata IDS) → eve.json → suricata_shipper.py (Daemon) → Tailscale / LAN HTTP POST → n8n Webhook → Local Ollama LLM → Alert Notification",
     stack: ["OPNsense (FreeBSD)", "Suricata IDS", "Python 3", "n8n", "Ollama", "Tailscale"],
     snippets: [
       {
-        filename: "suricata_shipper.py",
+        filename: "src/suricata_shipper.py",
         lang: "python",
         code: `#!/usr/local/bin/python3
 import time
@@ -76,7 +83,7 @@ if __name__ == "__main__":
     main()`
       },
       {
-        filename: "/usr/local/etc/rc.syshook.d/start/99-suricata-shipper",
+        filename: "freebsd/99-suricata-shipper",
         lang: "sh",
         code: `#!/bin/sh
 nohup /usr/local/bin/python3 /root/scripts/suricata_shipper.py >/var/log/suricata_shipper.log 2>&1 &`
@@ -102,13 +109,20 @@ nohup /usr/local/bin/python3 /root/scripts/suricata_shipper.py >/var/log/suricat
     category: 1,
     categoryName: "Cybersecurity, Networking & Academic Projects",
     subjectBadge: "CSCI369 Ethical Hacking",
+    visibility: "Private Academic Repo",
     title: "Enterprise Vulnerability Assessment & Remediation Simulation",
-    repoUrl: "https://github.com/keithputhoor/CSCI369-Ethical-Hacking",
+    repoUrl: "https://github.com/keithputhoor/CSCI369-Ethical-Hacking/tree/main/enterprise-vulnerability-remediation",
+    overview: "End-to-end credentialed and unauthenticated vulnerability assessment across isolated enterprise lab subnets using Tenable Nessus, paired with active exploitation verification in Metasploit and Wireshark, service hardening for Redis (CVSS 9.8) and Ruby Rack, and ISO/IEC 27001 control mapping.",
+    highlights: [
+      "Compared unauthenticated banner scans against SSH-credentialed dpkg inspection in Tenable Nessus to eliminate Debian/Ubuntu backport false positives.",
+      "Remediated an exposed Redis instance (CVSS 9.8 Critical) by binding strictly to loopback (127.0.0.1 -::1), enforcing requirepass, and renaming dangerous commands (FLUSHALL, CONFIG).",
+      "Patched Ruby Rack middleware traversal/ReDoS vulnerabilities and validated socket closure via ss -tulnp and Nmap NSE scripts."
+    ],
     pipeline: "Authenticated & Unauthenticated Subnet Scanning (Tenable Nessus) → Metasploit & Wireshark Exploitation Verification → Redis & Ruby Rack Remediation → ISO/IEC 27001 Control Mapping",
-    stack: ["Tenable Nessus", "Wireshark", "Metasploit", "Linux CLI", "Redis", "Ruby Rack"],
+    stack: ["Tenable Nessus", "Wireshark", "Metasploit", "Kali Linux", "Redis", "Ruby Rack"],
     snippets: [
       {
-        filename: "/etc/redis/redis.conf (CVSS 9.8 Remediation)",
+        filename: "enterprise-vulnerability-remediation/redis.conf",
         lang: "conf",
         code: `# 1. /etc/redis/redis.conf - Remediating Unprotected Redis Instance (CVSS 9.8)
 # Bind strictly to loopback interface instead of 0.0.0.0
@@ -122,7 +136,7 @@ rename-command FLUSHDB ""
 rename-command CONFIG "REDIS_ADMIN_CONFIG_89A1"`
       },
       {
-        filename: "remediate_verify.sh",
+        filename: "enterprise-vulnerability-remediation/remediate_verify.sh",
         lang: "bash",
         code: `#!/bin/bash
 # Upgrade vulnerable Rack gems to patch directory traversal / ReDoS CVEs
@@ -149,13 +163,20 @@ nmap -sV -p 6379 --script redis-info 192.168.10.0/24`
     category: 1,
     categoryName: "Cybersecurity, Networking & Academic Projects",
     subjectBadge: "CSIT375 AI & Cybersecurity",
+    visibility: "Private Academic Repo",
     title: "PDF Malware Detection & Behavioral Sanitization Engine",
-    repoUrl: "https://github.com/keithputhoor/CSIT375-AI-and-Cybersecurity",
+    repoUrl: "https://github.com/keithputhoor/CSIT375-AI-and-Cybersecurity/tree/main/project-pdf-malware-detection",
+    overview: "A machine learning PDF malware detector and active Content Disarm & Reconstruction (CDR) sanitizer developed for CSIT375 Artificial Intelligence and Cybersecurity. Uses a 100-tree Random Forest classifier trained on CIC-PDF-Malware-2022 to score structural PDF features and automatically rebuilds high-risk PDFs without executable triggers.",
+    highlights: [
+      "Extracts 20+ static lexical and structural indicators (/JS, /JavaScript, /OpenAction, /Acroform, /Launch, xref, trailer) without executing the file.",
+      "Achieves high precision using 5-fold stratified cross-validation on the CIC-PDF-Malware-2022 dataset.",
+      "Surgically reconstructs flagged PDFs (>50% risk) using PyPDF by copying only visual page objects into a clean container and stripping /OpenAction and /Names hooks."
+    ],
     pipeline: "Input PDF Stream → Static Lexical & Trailer Extraction (/JS, /OpenAction, /Acroform, xref) → Random Forest Classifier (CIC-PDF-Malware-2022) → Surgical PyPDF Content Disarm & Reconstruction (CDR)",
     stack: ["Python 3", "Scikit-Learn (Random Forest)", "PyPDF", "Pandas / NumPy", "CIC-PDF-Malware-2022"],
     snippets: [
       {
-        filename: "pdf_malware_detector.py (Static Feature Extraction & CDR Sanitizer)",
+        filename: "project-pdf-malware-detection/pdf_malware_detector.py",
         lang: "python",
         code: `from pypdf import PdfReader, PdfWriter
 import os, time
@@ -209,13 +230,20 @@ def sanitize_pdf_structure(input_path, output_path):
     category: 1,
     categoryName: "Cybersecurity, Networking & Academic Projects",
     subjectBadge: "CSCI368 Network Security",
+    visibility: "Private Academic Repo",
     title: "CloudCafe Multi-Site Enterprise Network Security Architecture",
-    repoUrl: "https://github.com/keithputhoor/CSCI368-Network-Security",
+    repoUrl: "https://github.com/keithputhoor/CSCI368-Network-Security/tree/main/project-cloudcafe-enterprise-network",
+    overview: "Full enterprise defense-in-depth network architecture designed in Cisco Packet Tracer for a multi-site organization connecting Dubai HQ (R1) and an Abu Dhabi Branch (R3) over an untrusted WAN backbone (R2).",
+    highlights: [
+      "Segmented HQ into 7 departmental 802.1Q VLANs (Kitchen, IT Management, Admin, Delivery, Marketing, Customer Care, and DMZ Web/DNS).",
+      "Enforced Extended ACL 100 (restricting diagnostic ICMP strictly to IT workstations) and Extended ACL 102 (permitting only HTTPS TCP/443 to the DMZ Web Server).",
+      "Configured a Site-to-Site IPsec VPN (ESP AES/SHA) across R1 and R3, a stateful Cisco IOS Zone-Based Policy Firewall (ZPF), and VLAN 200 WPA2-Enterprise 802.1X RADIUS wireless authentication."
+    ],
     pipeline: "7 Departmental 802.1Q VLANs (Dubai HQ R1) → Extended ACLs 100 & 102 → Zone-Based Policy Firewall (ZPF) → Site-to-Site IPsec VPN (ESP AES/SHA) → Abu Dhabi Branch (R3) & 802.1X RADIUS WLAN",
     stack: ["Cisco IOS", "Packet Tracer", "Site-to-Site IPsec VPN", "Zone-Based Firewall (ZPF)", "802.1X WPA2-Enterprise RADIUS", "Extended ACLs"],
     snippets: [
       {
-        filename: "hq-router-r1-security.ios (Extended ACLs & ZPF Policy)",
+        filename: "hq-router-r1-security.ios (Extended ACLs & IPsec VPN)",
         lang: "ios",
         code: `! 1. Extended ACL 100: Restrict network diagnostic ICMP strictly to IT Management hosts
 access-list 100 permit icmp 192.168.20.2 0.0.0.0 any
@@ -251,14 +279,187 @@ crypto ipsec transform-set VPN-SET esp-aes esp-sha-hmac`
     id: "PROJ-05",
     category: 1,
     categoryName: "Cybersecurity, Networking & Academic Projects",
+    subjectBadge: "CSCI369 Ethical Hacking",
+    visibility: "Private Academic Repo",
+    title: "OWASP Juice Shop Web Application Penetration Test",
+    repoUrl: "https://github.com/keithputhoor/CSCI369-Ethical-Hacking/tree/main/project-owasp-juiceshop-pentest",
+    overview: "Web application penetration test performed against an isolated OWASP Juice Shop instance on Kali Linux using Burp Suite Community Edition for passive spidering, REST API parameter enumeration, and OWASP Top 10 exploitation.",
+    highlights: [
+      "Routed Chromium traffic through Burp Suite Proxy (127.0.0.1:8080) on an isolated Host-Only network (192.168.56.101) to enumerate hidden /rest/ and /api/ endpoints.",
+      "Identified and exploited SQL Injection (OWASP A03:2021) on POST /rest/user/login to bypass authentication.",
+      "Mapped Reflected XSS on GET /rest/products/search?q= and Broken Access Control / IDOR (OWASP A01:2021) on administrative configuration routes."
+    ],
+    pipeline: "Kali Linux Chromium Client → Burp Suite Interception Proxy (127.0.0.1:8080) → Passive REST API Enumeration (/rest/ & /api/) → SQLi Auth Bypass & Reflected XSS Verification",
+    stack: ["Kali Linux", "Burp Suite", "OWASP Juice Shop", "SQL Injection (SQLi)", "Reflected XSS", "OWASP Top 10"],
+    snippets: [
+      {
+        filename: "burpsuite-intercepted-login-sqli.http",
+        lang: "http",
+        code: `POST /rest/user/login HTTP/1.1
+Host: localhost:3000
+Content-Type: application/json
+User-Agent: Mozilla/5.0 (X11; Linux x86_64)
+
+{
+  "email": "' OR 1=1--",
+  "password": "test"
+}`
+      }
+    ],
+    logs: [
+      {
+        title: "Isolating Dynamic REST Endpoints From SPA Asset Noise",
+        detail: "Angular single-page applications generate hundreds of static bundle and SVG requests. Configured Burp Suite HTTP history MIME/extension filters to hide static assets and isolate high-value JSON endpoints (/rest/user/login, /rest/products/search, /rest/admin/application-configuration)."
+      },
+      {
+        title: "Host-Only Virtual Network Containment",
+        detail: "Configured VirtualBox Adapter 1 as Host-Only (192.168.56.101) and verified zero external WAN routing before conducting active injection testing."
+      }
+    ]
+  },
+  {
+    id: "PROJ-06",
+    category: 1,
+    categoryName: "Cybersecurity, Networking & Academic Projects",
+    subjectBadge: "CSCI369 Ethical Hacking",
+    visibility: "Private Academic Repo",
+    title: "Wireshark TLS Decryption & Network Packet Forensics",
+    repoUrl: "https://github.com/keithputhoor/CSCI369-Ethical-Hacking/tree/main/labs/Lab-03-Wireshark-Packet-Capture-and-TLS-Decryption",
+    overview: "Deep-packet inspection and cryptographic session analysis of captured HTTPS traffic (csci369Lab3.pcap.pcapng) using Wireshark and pre-master secret key logs (sslkeys.log).",
+    highlights: [
+      "Analyzed TCP 3-way handshakes (SYN, SYN-ACK, ACK) and TLS Client Hello / Server Hello cipher-suite negotiation frames.",
+      "Configured Wireshark TLS protocol preferences with SSLKEYLOGFILE (sslkeys.log) to decrypt TLS application data streams in real time.",
+      "Applied display filters (tls, tcp.srcport == 443, len > 1024) to isolate decrypted HTTP/2 headers and extract sensitive payload artifacts."
+    ],
+    pipeline: "Raw PCAPNG Capture (csci369Lab3.pcap.pcapng) + Pre-Master Secret Log (sslkeys.log) → Wireshark TLS Dissector → Decrypted HTTP Headers & Payload Extraction",
+    stack: ["Wireshark", "TLS 1.2 / 1.3", "SSLKEYLOGFILE", "PCAPNG Forensics", "TCP/IP Analysis"],
+    snippets: [
+      {
+        filename: "wireshark-display-filters.txt",
+        lang: "text",
+        code: `# Isolate TLS handshake & encrypted frames on port 443
+tls or ssl
+tcp.srcport == 443 or udp.srcport == 443
+
+# Filter large payload frames (> 1024 bytes)
+frame.len > 1024
+
+# Inspect decrypted HTTP request/response streams after loading sslkeys.log
+http or http2`
+      }
+    ],
+    logs: [
+      {
+        title: "Decrypting Ephemeral Diffie-Hellman (ECDHE) TLS Sessions",
+        detail: "Modern TLS sessions use ephemeral key exchange (Forward Secrecy), meaning static server private keys cannot decrypt captured PCAPs. Loaded the session pre-master secrets (CLIENT_RANDOM) from sslkeys.log under Edit -> Preferences -> Protocols -> TLS to reconstruct decrypted HTTP streams."
+      }
+    ]
+  },
+  {
+    id: "PROJ-07",
+    category: 1,
+    categoryName: "Cybersecurity, Networking & Academic Projects",
+    subjectBadge: "CSIT375 AI & Cybersecurity",
+    visibility: "Private Academic Repo",
+    title: "Multivariate Gaussian Network Anomaly & NSL-KDD Intrusion Detection",
+    repoUrl: "https://github.com/keithputhoor/CSIT375-AI-and-Cybersecurity/tree/main/labs/Lab-06-Gaussian-Network-Anomaly-Detection",
+    overview: "Unsupervised statistical network anomaly detection and supervised multi-class intrusion detection on network traffic telemetry (network-logs.csv and the NSL-KDD benchmark dataset).",
+    highlights: [
+      "Modeled baseline network throughput and latency distributions using Multivariate Gaussian density estimation (μ, σ²) to flag anomalous sessions where p(x) < ε.",
+      "Trained and evaluated multi-class classifiers on the NSL-KDD dataset (Labs 9–10) to distinguish normal traffic from DoS, Probe, R2L, and U2R attack vectors.",
+      "Compared Support Vector Machines (SVM), Perceptrons, and Decision Trees across cybersecurity datasets."
+    ],
+    pipeline: "Network Telemetry (network-logs.csv / NSL-KDD) → Feature Normalization & Gaussian Parameter Estimation (μ, σ²) → Probability Thresholding (p(x) < ε) & Attack Classification",
+    stack: ["Python 3", "NumPy", "Pandas", "Scikit-Learn", "Matplotlib", "NSL-KDD Dataset"],
+    snippets: [
+      {
+        filename: "gaussian_anomaly_detection.py",
+        lang: "python",
+        code: `import numpy as np
+import pandas as pd
+
+def estimate_gaussian(X):
+    """Computes the mean (mu) and variance (sigma2) of each network feature."""
+    mu = np.mean(X, axis=0)
+    sigma2 = np.var(X, axis=0)
+    return mu, sigma2
+
+def multivariate_gaussian(X, mu, sigma2):
+    """Computes the probability density function of the multivariate Gaussian distribution."""
+    k = len(mu)
+    if sigma2.ndim == 1:
+        sigma2 = np.diag(sigma2)
+    X_centered = X - mu
+    norm_const = 1.0 / ((2 * np.pi) ** (k / 2) * np.linalg.det(sigma2) ** 0.5)
+    exp_term = np.exp(-0.5 * np.sum(X_centered @ np.linalg.pinv(sigma2) * X_centered, axis=1))
+    return norm_const * exp_term`
+      }
+    ],
+    logs: [
+      {
+        title: "Selecting Optimal Anomaly Threshold (ε) Without Over-Flagging Bursty Traffic",
+        detail: "Calibrated the probability density threshold ε using validation F1-scores so legitimate bandwidth spikes were not misclassified as Denial-of-Service anomalies."
+      }
+    ]
+  },
+  {
+    id: "PROJ-08",
+    category: 1,
+    categoryName: "Cybersecurity, Networking & Academic Projects",
+    subjectBadge: "CSCI368 & CSCI369 Labs",
+    visibility: "Private Academic Repo",
+    title: "ARP Cache Poisoning MITM & Burp Suite HTTP Parameter Tampering",
+    repoUrl: "https://github.com/keithputhoor/CSCI368-Network-Security/tree/main/labs/Lab-04-HTTP-Request-Interception-BurpSuite",
+    overview: "Practical offensive and defensive network interception labs demonstrating Layer-2 ARP cache poisoning on Ubuntu/Kali virtual networks and Layer-7 HTTP parameter manipulation using Burp Suite and Wireshark.",
+    highlights: [
+      "Executed bidirectional ARP spoofing between Kali Linux and an Ubuntu target VM while enabling kernel IP forwarding to inspect transit packets in Wireshark.",
+      "Intercepted e-commerce HTTP POST requests in Burp Suite Proxy to demonstrate server-side price/product-ID parameter tampering vulnerabilities.",
+      "Documented switch-level Dynamic ARP Inspection (DAI) and server-side input validation controls to mitigate both attack vectors."
+    ],
+    pipeline: "Layer-2 ARP Cache Poisoning (arpspoof + IP Forwarding) & Layer-7 Burp Suite Proxy Intercept → Wireshark PCAP Verification → DAI & Server-Side Validation Remediation",
+    stack: ["Kali Linux", "Burp Suite", "Wireshark", "arpspoof", "Ubuntu VM", "PCAP Analysis"],
+    snippets: [
+      {
+        filename: "arp-mitm-commands.sh",
+        lang: "bash",
+        code: `# 1. Inspect baseline ARP table and interfaces before MITM
+ip addr
+arp -a
+
+# 2. Enable kernel IPv4 packet forwarding on Kali Linux so target traffic isn't dropped
+echo 1 > /proc/sys/net/ipv4/ip_forward
+
+# 3. Poison target and gateway ARP caches simultaneously
+arpspoof -i eth0 -t 10.0.2.15 10.0.2.1
+arpspoof -i eth0 -t 10.0.2.1 10.0.2.15`
+      }
+    ],
+    logs: [
+      {
+        title: "Preventing Target Connection Drops During ARP MITM",
+        detail: "Without kernel IP forwarding (/proc/sys/net/ipv4/ip_forward = 1), poisoning the victim's ARP cache blackholes their traffic and immediately alerts the user. Enabled IP forwarding prior to launching arpspoof so packets transparently routed through the Kali interface while Wireshark captured the stream."
+      }
+    ]
+  },
+  {
+    id: "PROJ-09",
+    category: 1,
+    categoryName: "Cybersecurity, Networking & Academic Projects",
     subjectBadge: "Python Foundations",
+    visibility: "Public Repo",
     title: "Python CLI Restaurant Ordering & Menu Summary Tool",
     repoUrl: "https://github.com/keithputhoor/homelab-infrastructure-iac/tree/main/restaurant-analytics-cli",
+    overview: "Foundational Python CLI project combining a customer menu-ordering interface with an admin dish-summary script backed by persistent CSV storage (orders.csv), Pandas grouping, and Matplotlib pie charts.",
+    highlights: [
+      "Provides a contactless customer CLI ordering flow that records itemized transactions to orders.csv.",
+      "Includes an authenticated admin summary script that groups orders by course (Starters, Main Course, Dessert, Beverages) using Pandas.",
+      "Generates Matplotlib pie charts visualizing the most frequently ordered dishes per course."
+    ],
     pipeline: "Customer CLI Ordering Menu → Persistent CSV Storage (orders.csv) → Admin Login Check → Pandas Course Grouping & Matplotlib Dish Popularity Charts",
     stack: ["Python 3", "CSV File I/O", "Pandas", "Matplotlib"],
     snippets: [
       {
-        filename: "restaurant_analytics.py",
+        filename: "restaurant-analytics-cli/restaurant_analytics.py",
         lang: "python",
         code: `import csv
 import os
@@ -318,17 +519,24 @@ if __name__ == "__main__":
     ]
   },
   {
-    id: "PROJ-06",
+    id: "PROJ-10",
     category: 2,
     categoryName: "Homelab, Self-Hosting & Communications",
-    subjectBadge: "Proxmox VE & Zero Trust",
+    subjectBadge: "Proxmox VE & Debian",
+    visibility: "Public Repo",
     title: "Proxmox VE Virtualization & Media Automation Stack",
     repoUrl: "https://github.com/keithputhoor/homelab-infrastructure-iac/tree/main/proxmox-media-stack",
-    pipeline: "Proxmox VE Bare-Metal Hypervisor → Isolated Linux VMs & LXC Containers → Unified /mnt/media:/data Hardlink Mount → Docker Compose (*arr Stack, Jellyfin, Kavita, n8n) → Cloudflare Zero Trust Access",
-    stack: ["Proxmox VE", "Debian Linux", "Docker Compose", "Cloudflare Zero Trust"],
+    overview: "Bare-metal Proxmox VE virtualization environment running isolated Debian Linux VMs and unprivileged LXC containers. Orchestrates a multi-container media, digital library, and workflow automation stack via Docker Compose, secured externally through Cloudflare Zero Trust Access.",
+    highlights: [
+      "Runs Jellyfin, Jellyseerr, Sonarr, Radarr, Prowlarr, qBittorrent, Kavita, and n8n on Debian Linux with least-privilege PUID/PGID=1000 permissions.",
+      "Uses a unified /mnt/media:/data bind-mount architecture across Proxmox and Docker so Sonarr/Radarr execute instant atomic hardlinks instead of slow I/O file copies.",
+      "Eliminates WAN port forwarding on the router by exposing public-facing services through Cloudflare Zero Trust Tunnels (cloudflared) with OTP authentication."
+    ],
+    pipeline: "Proxmox VE Bare-Metal Hypervisor → Isolated Debian VMs & LXC Containers → Unified /mnt/media:/data Hardlink Mount → Docker Compose (*arr Stack, Jellyfin, Kavita, n8n) → Cloudflare Zero Trust Access",
+    stack: ["Proxmox VE", "Debian Linux", "Docker Compose", "Cloudflare Zero Trust", "LXC"],
     snippets: [
       {
-        filename: "docker-compose.yml",
+        filename: "proxmox-media-stack/docker-compose.yml",
         lang: "yaml",
         code: `version: "3.9"
 services:
@@ -448,22 +656,29 @@ services:
       },
       {
         title: "Zero-Trust External Access Without Port Forwarding",
-        detail: "Exposed Jellyseerr, Kavita, and Shelfmark under custom subdomains via Cloudflare Zero Trust Tunnels (cloudflared) protected by Cloudflare Access OTP policies, eliminating public WAN port exposure on the residential router."
+        detail: "Exposed Jellyseerr, Kavita, and Shelfmark under example.com subdomains via Cloudflare Zero Trust Tunnels (cloudflared) protected by Cloudflare Access OTP policies, eliminating public WAN port exposure on the residential router."
       }
     ]
   },
   {
-    id: "PROJ-07",
+    id: "PROJ-11",
     category: 2,
     categoryName: "Homelab, Self-Hosting & Communications",
     subjectBadge: "GPU Passthrough & LLM",
+    visibility: "Public Repo",
     title: "Local AI Inference Server",
     repoUrl: "https://github.com/keithputhoor/homelab-infrastructure-iac/tree/main/local-ai-inference",
+    overview: "Self-hosted, GPU-accelerated LLM inference stack running Ollama and Open WebUI inside a Proxmox VE Debian environment via the NVIDIA Container Toolkit. Provides both an authenticated local chat UI and a low-latency REST API for automated n8n SOC alert triage.",
+    highlights: [
+      "Passed physical NVIDIA GPU character devices (/dev/nvidia*) through Proxmox VE into the Docker runtime using nvidia-container-toolkit.",
+      "Configured OLLAMA_KEEP_ALIVE=5m to automatically unload model weights from VRAM after idle periods.",
+      "Bound Ollama across the internal Docker bridge network while enforcing WEBUI_AUTH=true on Open WebUI."
+    ],
     pipeline: "Proxmox VE Host (NVIDIA GPU Passthrough /dev/nvidia*) → NVIDIA Container Toolkit → Ollama Backend (0.0.0.0:11434) → Open WebUI & n8n REST API",
-    stack: ["Proxmox VE", "Docker Compose", "NVIDIA Container Toolkit", "Ollama", "Open WebUI"],
+    stack: ["Proxmox VE", "Debian Linux", "Docker Compose", "NVIDIA Container Toolkit", "Ollama", "Open WebUI"],
     snippets: [
       {
-        filename: "docker-compose.ai.yml",
+        filename: "local-ai-inference/docker-compose.ai.yml",
         lang: "yaml",
         code: `version: "3.8"
 services:
@@ -513,17 +728,24 @@ services:
     ]
   },
   {
-    id: "PROJ-08",
+    id: "PROJ-12",
     category: 2,
     categoryName: "Homelab, Self-Hosting & Communications",
     subjectBadge: "IoT & Zigbee Mesh",
+    visibility: "Public Repo",
     title: "Smart Home Automation",
     repoUrl: "https://github.com/keithputhoor/homelab-infrastructure-iac/tree/main/smart-home-zigbee",
+    overview: "Local-only Home Assistant automation stack integrated with Zigbee2MQTT, an Eclipse Mosquitto broker, and an SLZB-06p7 PoE/LAN coordinator. Correlates Hobeian ZG-102ZM vibration sensors with mmWave human presence sensors for zero-cloud security automation.",
+    highlights: [
+      "Decoupled the Zigbee radio from Proxmox USB passthrough constraints by running an SLZB-06p7 PoE coordinator over TCP (tcp://<COORDINATOR_IP>:6638).",
+      "Tuned the Zigbee 3.0 mesh to Channel 20 at 20 dBm transmit power to avoid 2.4 GHz Wi-Fi co-channel interference.",
+      "Built multi-sensor state correlation in Home Assistant so vibration tamper alerts only fire when the mmWave presence sensor confirms the room is vacant."
+    ],
     pipeline: "SLZB-06p7 PoE Coordinator (tcp://<COORDINATOR_IP>:6638, Channel 20) → Zigbee2MQTT → Eclipse Mosquitto Broker → Home Assistant Core (Hobeian ZG-102ZM Vibration + mmWave Presence Correlation)",
     stack: ["Home Assistant", "Zigbee2MQTT", "MQTT", "SLZB-06p7", "YAML Automations"],
     snippets: [
       {
-        filename: "zigbee2mqtt/configuration.yaml",
+        filename: "smart-home-zigbee/zigbee2mqtt/configuration.yaml",
         lang: "yaml",
         code: `# Zigbee2MQTT configuration.yaml (SLZB-06p7 Network Coordinator)
 homeassistant: true
@@ -546,7 +768,7 @@ frontend:
   port: 8080`
       },
       {
-        filename: "homeassistant/automations.yaml",
+        filename: "smart-home-zigbee/homeassistant/automations.yaml",
         lang: "yaml",
         code: `# Home Assistant Automation: Hobeian ZG-102ZM Vibration & mmWave Presence Logic
 alias: "Security - Tamper & Presence Alert"
@@ -617,12 +839,12 @@ function renderCards() {
           <span class="card-subject">${escapeHtml(proj.subjectBadge)}</span>
         </div>
         <h3 class="card-title">${escapeHtml(proj.title)}</h3>
-        <div class="card-arch">${escapeHtml(proj.pipeline)}</div>
+        <p style="font-size: 0.86rem; color: var(--text-secondary); margin-bottom: 0.85rem;">${escapeHtml(proj.overview)}</p>
         <div class="stack-tags">${tagsHtml}</div>
       </div>
       <div class="card-footer">
-        <span>[INSPECT CASE STUDY]</span>
-        <span>3 TABS &rarr;</span>
+        <span>[OPEN DETAILED VIEW]</span>
+        <span>${escapeHtml(proj.visibility)} &rarr;</span>
       </div>
     `;
 
@@ -644,14 +866,31 @@ function renderCards() {
 
 function openModal(proj) {
   const modal = document.getElementById("case-study-modal");
-  document.getElementById("modal-category").textContent = `${proj.id} // ${proj.categoryName}`;
+  document.getElementById("modal-category").textContent = `${proj.id} // ${proj.categoryName} // ${proj.subjectBadge}`;
   document.getElementById("modal-title").textContent = proj.title;
+
   const repoLink = document.getElementById("modal-repo-link");
   repoLink.href = proj.repoUrl;
 
-  // Tab 1: Architecture & Specs
+  const repoUrlText = document.getElementById("modal-repo-url-text");
+  repoUrlText.textContent = proj.repoUrl;
+
+  const visBadge = document.getElementById("modal-visibility-badge");
+  visBadge.textContent = proj.visibility;
+  visBadge.className = `visibility-badge ${proj.visibility.includes("Private") ? "private" : "public"}`;
+
+  const highlightsHtml = (proj.highlights || [])
+    .map((h) => `<li>${escapeHtml(h)}</li>`)
+    .join("");
+
+  // Tab 1: Overview, Highlights & Architecture
   const archPanel = document.getElementById("tab-arch");
   archPanel.innerHTML = `
+    <div class="panel-section">
+      <div class="panel-heading">Project Overview</div>
+      <p class="overview-text">${escapeHtml(proj.overview)}</p>
+      <ul class="highlights-list">${highlightsHtml}</ul>
+    </div>
     <div class="panel-section">
       <div class="panel-heading">Data &amp; Control Pipeline</div>
       <div class="pipeline-box">${escapeHtml(proj.pipeline)}</div>
@@ -732,6 +971,7 @@ document.addEventListener("DOMContentLoaded", () => {
   renderCards();
 
   document.getElementById("modal-close").addEventListener("click", closeModal);
+  document.getElementById("modal-close-bottom").addEventListener("click", closeModal);
   document.getElementById("case-study-modal").addEventListener("click", (e) => {
     if (e.target.id === "case-study-modal") closeModal();
   });
