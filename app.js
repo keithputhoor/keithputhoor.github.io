@@ -233,13 +233,13 @@ def sanitize_pdf_structure(input_path, output_path):
     visibility: "Private Academic Repo",
     title: "CloudCafe Multi-Site Enterprise Network Security Architecture",
     repoUrl: "https://github.com/keithputhoor/CSCI368-Network-Security/tree/main/project-cloudcafe-enterprise-network",
-    overview: "Full enterprise defense-in-depth network architecture designed in Cisco Packet Tracer for a multi-site organization connecting Dubai HQ (R1) and an Abu Dhabi Branch (R3) over an untrusted WAN backbone (R2).",
+    overview: "Full enterprise defense-in-depth network architecture designed in Cisco Packet Tracer for a multi-site organization connecting Site-A HQ (R1) and Site-B Remote Branch (R3) over an untrusted WAN backbone (R2).",
     highlights: [
       "Segmented HQ into 7 departmental 802.1Q VLANs (Kitchen, IT Management, Admin, Delivery, Marketing, Customer Care, and DMZ Web/DNS).",
       "Enforced Extended ACL 100 (restricting diagnostic ICMP strictly to IT workstations) and Extended ACL 102 (permitting only HTTPS TCP/443 to the DMZ Web Server).",
       "Configured a Site-to-Site IPsec VPN (ESP AES/SHA) across R1 and R3, a stateful Cisco IOS Zone-Based Policy Firewall (ZPF), and VLAN 200 WPA2-Enterprise 802.1X RADIUS wireless authentication."
     ],
-    pipeline: "7 Departmental 802.1Q VLANs (Dubai HQ R1) → Extended ACLs 100 & 102 → Zone-Based Policy Firewall (ZPF) → Site-to-Site IPsec VPN (ESP AES/SHA) → Abu Dhabi Branch (R3) & 802.1X RADIUS WLAN",
+    pipeline: "7 Departmental 802.1Q VLANs (Site-A HQ R1) → Extended ACLs 100 & 102 → Zone-Based Policy Firewall (ZPF) → Site-to-Site IPsec VPN (ESP AES/SHA) → Site-B Branch (R3) & 802.1X RADIUS WLAN",
     stack: ["Cisco IOS", "Packet Tracer", "Site-to-Site IPsec VPN", "Zone-Based Firewall (ZPF)", "802.1X WPA2-Enterprise RADIUS", "Extended ACLs"],
     snippets: [
       {
@@ -254,7 +254,7 @@ access-list 100 deny icmp any any
 access-list 102 permit tcp any host 192.168.70.3 eq 443
 access-list 102 deny ip any any
 
-! 3. Site-to-Site IPsec VPN (Dubai HQ R1 10.1.1.2 <-> Abu Dhabi Branch R3 10.2.2.2)
+! 3. Site-to-Site IPsec VPN (Site-A HQ R1 10.1.1.2 <-> Site-B Branch R3 10.2.2.2)
 crypto isakmp policy 10
  encr aes
  hash sha
@@ -271,7 +271,7 @@ crypto ipsec transform-set VPN-SET esp-aes esp-sha-hmac`
       },
       {
         title: "Securing Branch Office Traffic Across an Untrusted ISP Backbone",
-        detail: "Configured an IPsec ESP tunnel between Dubai HQ (R1) and the Abu Dhabi branch (R3) across intermediary router R2, paired with a stateful Zone-Based Policy Firewall (IN-2-OUT-ZPAIR) and VLAN 200 WPA2-Enterprise RADIUS authentication."
+        detail: "Configured an IPsec ESP tunnel between Site-A HQ (R1) and the Site-B branch (R3) across intermediary router R2, paired with a stateful Zone-Based Policy Firewall (IN-2-OUT-ZPAIR) and VLAN 200 WPA2-Enterprise RADIUS authentication."
       }
     ]
   },
@@ -325,13 +325,13 @@ User-Agent: Mozilla/5.0 (X11; Linux x86_64)
     visibility: "Private Academic Repo",
     title: "Wireshark TLS Decryption & Network Packet Forensics",
     repoUrl: "https://github.com/keithputhoor/CSCI369-Ethical-Hacking/tree/main/labs/Lab-03-Wireshark-Packet-Capture-and-TLS-Decryption",
-    overview: "Deep-packet inspection and cryptographic session analysis of captured HTTPS traffic (csci369Lab3.pcap.pcapng) using Wireshark and pre-master secret key logs (sslkeys.log).",
+    overview: "Deep-packet inspection and cryptographic session analysis of captured HTTPS traffic (tls_capture_1.pcapng) using Wireshark and pre-master secret key logs (sslkeys.log).",
     highlights: [
       "Analyzed TCP 3-way handshakes (SYN, SYN-ACK, ACK) and TLS Client Hello / Server Hello cipher-suite negotiation frames.",
       "Configured Wireshark TLS protocol preferences with SSLKEYLOGFILE (sslkeys.log) to decrypt TLS application data streams in real time.",
       "Applied display filters (tls, tcp.srcport == 443, len > 1024) to isolate decrypted HTTP/2 headers and extract sensitive payload artifacts."
     ],
-    pipeline: "Raw PCAPNG Capture (csci369Lab3.pcap.pcapng) + Pre-Master Secret Log (sslkeys.log) → Wireshark TLS Dissector → Decrypted HTTP Headers & Payload Extraction",
+    pipeline: "Raw PCAPNG Capture (tls_capture_1.pcapng) + Pre-Master Secret Log (sslkeys.log) → Wireshark TLS Dissector → Decrypted HTTP Headers & Payload Extraction",
     stack: ["Wireshark", "TLS 1.2 / 1.3", "SSLKEYLOGFILE", "PCAPNG Forensics", "TCP/IP Analysis"],
     snippets: [
       {
