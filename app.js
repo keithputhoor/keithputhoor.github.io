@@ -1002,7 +1002,8 @@ function openModal(proj) {
   if (modalBody) {
     modalBody.scrollTop = 0;
   }
-  setActiveTabButton("arch");
+  currentActiveTab = null;
+  setActiveTabButton("arch", true);
 }
 
 function closeModal() {
@@ -1014,17 +1015,40 @@ function closeModal() {
 
 let isProgrammaticScroll = false;
 let scrollLockTimer = null;
+let currentActiveTab = "arch";
 
-function setActiveTabButton(tabKey) {
+function snapTabToSide(activeBtn, instant = false) {
+  const tabsContainer = document.querySelector("#case-study-modal .modal-tabs");
+  if (!tabsContainer || !activeBtn) return;
+
+  const padLeft = parseFloat(window.getComputedStyle(tabsContainer).paddingLeft) || 0;
+  const targetLeft = Math.max(0, activeBtn.offsetLeft - padLeft);
+
+  tabsContainer.scrollTo({
+    left: targetLeft,
+    behavior: instant ? "auto" : "smooth"
+  });
+}
+
+function setActiveTabButton(tabKey, forceSnap = false) {
+  if (currentActiveTab === tabKey && !forceSnap) return;
+  currentActiveTab = tabKey;
+
+  let activeBtn = null;
   document.querySelectorAll(".tab-btn").forEach((btn) => {
     const active = btn.getAttribute("data-tab") === tabKey;
     btn.classList.toggle("active", active);
     btn.setAttribute("aria-selected", active ? "true" : "false");
+    if (active) activeBtn = btn;
   });
+
+  if (activeBtn) {
+    snapTabToSide(activeBtn, forceSnap);
+  }
 }
 
 function switchTab(tabKey) {
-  setActiveTabButton(tabKey);
+  setActiveTabButton(tabKey, true);
   const modalBody = document.querySelector("#case-study-modal .modal-body");
   const targetSection = document.getElementById(`tab-${tabKey}`);
   if (!modalBody || !targetSection) return;
@@ -1109,4 +1133,13 @@ document.addEventListener("DOMContentLoaded", () => {
   if (modalBody) {
     modalBody.addEventListener("scroll", updateActiveTabOnScroll, { passive: true });
   }
+
+  window.addEventListener("resize", () => {
+    const modal = document.getElementById("case-study-modal");
+    if (modal && modal.classList.contains("open")) {
+      updateActiveTabOnScroll();
+      const activeBtn = document.querySelector(".tab-btn.active");
+      if (activeBtn) snapTabToSide(activeBtn, true);
+    }
+  });
 });
